@@ -1,0 +1,31 @@
+{% extends "todo/base.html" %}
+
+{% block title %}{{ todo.title }}{% endblock %}
+
+{% block content %}
+<main class="main">
+    <div class="container mt-5" style="background-color: #121212; padding: 30px; border-radius: 15px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-white">{{ todo.title }}</h2>
+            <a href="{% url 'todo:delete_todo' todo.id %}" class="btn btn-danger btn-sm">Удалить</a>
+        </div>
+        <p class="text-white">Создано: {{ todo.created_at }}</p>
+
+        <h3 class="text-white">Список задач:</h3>
+        <ul class="list-group">
+            {% for task in tasks %}
+            <li class="list-group-item {% if task.completed %}completed{% endif %}" style="background-color: #00cc00;">
+                <span class="text-white">{{ task.title }} - {{ task.data_start|date:"d.m.Y H:i" }} до {{ task.data_finish|date:"d.m.Y H:i" }}</span>
+                {% if not task.completed %}
+                <a href="{% url 'todo:complete_task' task.id %}" class="btn btn-success btn-sm float-right">Не выполнено</a>
+                {% else %}
+                <span class="text-success float-right">Выполнено</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+
+        <a href="{% url 'todo:get_todos' %}" class="btn btn-primary mt-3">Назад к списку</a>
+    </div>
+</main>
+{% endblock %}

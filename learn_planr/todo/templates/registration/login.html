@@ -1,0 +1,30 @@
+{% extends "todo/base.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<main class="main d-flex align-items-center" style="background-color: #1f1f1f;">
+    <div class="container" >
+        <div class="row justify-content-center" >
+            <div class="col-md-6" >
+                <div class="login-container p-5 rounded shadow-lg" style="background-color:#00cc00;">
+                    <h2 class="text-center mb-4 text-dark display-4 font-weight-bold">Добро пожаловать!</h2>
+                    <form action="/login/" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="{{ form.username.id_for_label }}" class="h5 font-weight-bold text-dark">Имя пользователя</label>
+                            <input type="{{ form.username.field.widget.input_type }}" name="{{ form.username.name }}" class="form-control command-input" id="{{ form.username.id_for_label }}" placeholder="{{ form.username.field.label }}" autocomplete="off" >
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.password.id_for_label }}" class="h5 font-weight-bold text-dark">Пароль</label>
+                            <input type="{{ form.password.field.widget.input_type }}" name="{{ form.password.name }}" class="form-control command-input" id="{{ form.password.id_for_label }}" placeholder="{{ form.password.field.label }}" autocomplete="off" >
+                        </div>
+                        <button type="submit" class="btn btn-dark btn-block btn-lg">Войти</button>
+                    </form>
+                    <p class="mt-4 text-center text-dark">Еще не зарегистрированы? <a href="{% url 'todo:sign_up' %}" class="text-dark font-weight-bold">Зарегистрируйтесь</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

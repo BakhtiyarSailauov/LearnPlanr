@@ -1,0 +1,25 @@
+{% extends "todo/base.html" %}
+
+{% block title %}Список задач{% endblock %}
+
+{% block content %}
+<main class="main">
+    <div class="container mt-5" style="background-color: #121212; padding: 30px; border-radius: 15px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);">
+        <h2 class="mb-4 text-white">Список задач</h2>
+        <div class="row">
+            {% for todo in todos %}
+                <div class="col-md-4 mb-4">
+                    <div class="card" style="background-color: #00cc00; border: none;">
+                        <div class="card-body">
+                            <h5 class="card-title text-white">{{ todo.title }}</h5>
+                            <p class="card-text text-white">{{ todo.incomplete_task_count }} незавершенных задач</p>
+                            <a href="{% url 'todo:get_todo' todo.id %}" class="btn btn-primary">Подробнее</a>
+                            <a href="{% url 'todo:delete_todo' todo.id %}" class="btn btn-danger ml-2">Удалить</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "todo/base.html" %}
+
+{% block title %}LearnPlanr{% endblock %}
+
+{% block content %}
+<main class="main">
+    <div class="chat-container">
+        <form action="{% url 'todo:main' %}" method="post" class="command-container">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="text" name="user_input" class="form-control command-input" id="user-input" placeholder="Введите ремесло..." autocomplete="off">
+            </div>
+            <button type="submit" class="command-button">Отправить</button>
+        </form>
+    </div>
+</main>
+
+<script>
+    const userInputElement = document.getElementById("user-input");
+    const todo = "Привет, пиши кем хочешь стать, а я составлю тебе расписание!";
+    let currentIndex = 0;
+    let intervalId;
+
+    function updateRunningText() {
+        if (currentIndex < todo.length) {
+            userInputElement.value += todo[currentIndex];
+            currentIndex++;
+            userInputElement.scrollLeft = userInputElement.scrollWidth; // Прокручиваем вправо, чтобы весь текст был виден
+        } else {
+            clearInterval(intervalId);
+        }
+    }
+
+
+
+    function onMouseEnter() {
+        currentIndex = 0;
+        userInputElement.value = "";
+        intervalId = setInterval(updateRunningText, 100); // Запускаем автоматический бегущий текст
+        userInputElement.removeEventListener("mouseenter", onMouseEnter);
+    }
+
+    function onClick() {
+        clearInterval(intervalId);
+        userInputElement.removeEventListener("click", onClick);
+        userInputElement.value = ""; // Удаляем текст
+    }
+
+    userInputElement.addEventListener("mouseenter", onMouseEnter);
+    userInputElement.addEventListener("click", onClick);
+</script>
+{% endblock %}
