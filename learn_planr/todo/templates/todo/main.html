@@ -12,6 +12,11 @@
             </div>
             <button type="submit" class="command-button">Отправить</button>
         </form>
+
+        <!-- Add an error message container -->
+        <div id="error-message" class="error-message" style="display: none;">
+            Ошибка: Не удалось получить расписание. Пожалуйста, попробуйте снова.
+        </div>
     </div>
 </main>
 
@@ -31,8 +36,6 @@
         }
     }
 
-
-
     function onMouseEnter() {
         currentIndex = 0;
         userInputElement.value = "";
@@ -46,6 +49,7 @@
         userInputElement.value = ""; // Удаляем текст
     }
 
+    // Add event listeners to trigger the animations
     userInputElement.addEventListener("mouseenter", onMouseEnter);
     userInputElement.addEventListener("click", onClick);
 </script>

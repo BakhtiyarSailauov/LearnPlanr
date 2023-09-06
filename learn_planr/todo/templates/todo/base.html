@@ -82,7 +82,44 @@
             background-color: #00cc00;
             color: #ffffff;
         }
-    </style>
+        /* Style for the main task items */
+    .main-task {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 10px 0;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Style for completed main task items */
+    .main-task.completed {
+        background-color: #eee;
+        text-decoration: line-through;
+    }
+
+    /* Style for sub-tasks container */
+    .main-task-sub-tasks {
+        margin-top: 10px;
+    }
+
+    /* Style for sub-task items */
+    .sub-task {
+        background-color: #fff; /* White background */
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 5px 0;
+        box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Style for completed sub-task items */
+    .sub-task.completed {
+        background-color: #eee;
+        text-decoration: line-through;
+    }
+
+</style>
 </head>
 <body>
     <header class="bg-dark-custom text-white-custom">

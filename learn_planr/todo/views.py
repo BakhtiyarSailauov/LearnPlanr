@@ -1,13 +1,16 @@
 import datetime
 import json
 from datetime import timedelta
-
-from django.http import HttpResponseRedirect
+from django.db.utils import IntegrityError
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from django.db import transaction
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from .forms import SignUpForm, RequestForm
-from .models import Schedule, Task
+from .models import Schedule, Task, Chapter
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -34,84 +37,129 @@ class MainView(View):
         form = RequestForm()
         return render(request, 'todo/main.html', {'form': form})
 
-    @method_decorator(login_required(login_url="/login/"))
     def post(self, request):
         form = RequestForm(request.POST)
-        if form.is_valid():
-            user_input = form.cleaned_data['user_input']
-            messages = [{"role": "user", "content": f"что нужно учить чтобы стать {user_input}, укажи сколько время уходят на каждое из них детально. Верни как JSON dict без вложение"}]
+        try:
+            if form.is_valid():
+                user_input = form.cleaned_data['user_input']
+                messages = [{"role": "user", "content": f"что нужно учить чтобы стать {user_input}. Укажи только сколько время уходят. На каждое из них детально. ('тема': 'время'). Верни как JSON dict без вложение"}]
 
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-                temperature=0.5,
-                max_tokens=3000
-            )
-            todo = Schedule(author=request.user,
-                            title=user_input,
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages,
+                    temperature=0.5,
+                    max_tokens=3000
+                )
+
+                with transaction.atomic():
+                    todo = Schedule(author=request.user, title=user_input)
+                    todo.save()
+
+                    if response:
+                        content = response['choices'][0]['message']['content']
+                        print(content)
+                        content_dict = json.loads(content)
+                        current_time = timezone.now()
+
+                        for key, value in content_dict.items():
+                            task = Task(schedule=todo, title=key)
+                            task.data_start, task.data_finish = self.calculate_time_periods(current_time, value)
+                            task.save()
+
+                            current_time = task.data_finish
+
+                            chapter_messages = [{"role": "user",
+                                                 "content": f"что нужно учить чтобы стать {key}. Укажи только сколько время уходят. На каждое из них детально. ('тема': 'время'). Верни как JSON dict без вложение"}]
+
+                            chapter_response = openai.ChatCompletion.create(
+                                model="gpt-3.5-turbo",
+                                messages=chapter_messages,
+                                temperature=0.5,
+                                max_tokens=3000
                             )
-            todo.save()
-            if response:
-                list_of_dicts = json.loads(str(response).strip())
-                content = response['choices'][0]['message']['content']
-                content_dict = json.loads(content)
-                print(content_dict)
-                current_time = datetime.datetime.now()
 
-                for key, value in content_dict.items():
-                    task = Task()
-                    task.schedule = todo
-                    task.title = value[0]
-                    periods = re.findall(r'(\d+)\s*(часов*|часа*|месяцев*|месяца*|годов*|года*|недели*|недель*|минут*|минутов)', value)
-                    print(periods, "per", value)
-                    for period in periods:
-                        num, unit = period
-                        num = int(num)
-                        print(num, unit)
-                        if 'час' in unit:
-                            task.data_start = current_time
-                            task.data_finish = current_time + timedelta(hours=num)
-                        elif 'недель' in unit:
-                            task.data_start = current_time
-                            task.data_finish = current_time + timedelta(weeks=num)
-                        elif 'минут' in unit:
-                            task.data_start = current_time
-                            task.data_finish = current_time + timedelta(minutes=num)
-                        elif 'месяц' in unit:
-                            task.data_start = current_time
-                            task.data_finish = current_time + timedelta(days=(num * 30))
-                        elif 'год' in unit:
-                            task.data_start = current_time
-                            task.data_finish = current_time + timedelta(days=(num * 365))
+                            if chapter_response:
+                                chapter_content = chapter_response['choices'][0]['message']['content']
+                                chapter_content_dict = json.loads(chapter_content)
+                                current_time = timezone.now()
 
-                    current_time = task.data_finish
-                    task.title = key
-                    task.save()
+                                for key_task, value_task in chapter_content_dict.items():
+                                    chapter = Chapter(task=task, title=key_task)
+                                    chapter.data_start, chapter.data_finish = self.calculate_time_periods(current_time, value_task)
+                                    chapter.save()
+
+                return HttpResponseRedirect(reverse("todo:get_todo", args=(todo.id,)))
             else:
-                print("Invalid JSON string")
+                return render(request, 'todo/main.html', {'form': form})
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return render(request, 'todo/main.html', {'form': form})
 
-            return HttpResponseRedirect(reverse("todo:get_todo", args=(todo.id, )))
+    def calculate_time_periods(self, current_time, value):
+        data_start = current_time
+        data_finish = current_time
+        periods = re.findall(r'(\d+)\s*(часов*|часа*|месяцев*|месяца*|годов*|года*|недели*|недель*|минут*|минутов)',
+                             value)
+        for period in periods:
+            num, unit = period
+            num = int(num)
+            if 'час' in unit:
+                data_start = current_time
+                data_finish = current_time + timedelta(hours=num)
+            elif 'недель' in unit:
+                data_start = current_time
+                data_finish = current_time + timedelta(weeks=num)
+            elif 'минут' in unit:
+                data_start = current_time
+                data_finish = current_time + timedelta(minutes=num)
+            elif 'месяц' in unit:
+                data_start = current_time
+                data_finish = current_time + timedelta(days=(num * 30))
+            elif 'год' in unit:
+                data_start = current_time
+                data_finish = current_time + timedelta(days=(num * 365))
 
-        return render(request, 'todo/main.html', {'form': form})
+        return data_start, data_finish
 
 
 @login_required(login_url="/login/")
 def get_todo(request, todo_id):
     todo = get_object_or_404(Schedule, pk=todo_id)
     tasks = Task.objects.filter(schedule=todo).order_by("id")
-    context = {"todo": todo, "tasks": tasks}
+    chapters = []
+
+    for task in tasks:
+        task_data = {
+            "task": task,
+            "chapters": Chapter.objects.filter(task=task)
+        }
+        chapters.append(task_data)
+    context = {"todo": todo, "tasks": tasks, "chapters": chapters}
     return render(request, "todo/page.html", context)
 
 
-@login_required(login_url="/login/")
-def complete_task(request, task_id):
-    task = get_object_or_404(Task, pk=task_id)
+def toggle_task_completion(request):
+    if request.method == 'POST':
+        task_data_id = request.POST.get('task_data_id')
+        first_btn = request.POST.get('first_btn')
+        print(first_btn)
+        try:
+            chapter_previous = Chapter.objects.get(pk=str(int(task_data_id)-1))
+            chapter = Chapter.objects.get(pk=task_data_id)
+            chapter_next = Chapter.objects.get(pk=str(int(task_data_id)+1))
+            chapter.completed = not chapter.completed
 
-    if task.schedule.author == request.user:
-        task.completed = True
-        task.save()
+            chapter.next_button_enabled = not chapter.next_button_enabled
+            chapter_next.next_button_enabled = not chapter_next.next_button_enabled
+            chapter.save()
+            chapter_next.save()
+            return JsonResponse({'success': True})
+        except Task.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Task not found'})
+        except Chapter.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Chapter not found'})
 
-    return redirect("todo:get_todo", todo_id=task.schedule.id)
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 @login_required(login_url="/login/")

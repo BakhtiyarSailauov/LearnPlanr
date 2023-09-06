@@ -12,7 +12,6 @@
                     <div class="card" style="background-color: #00cc00; border: none;">
                         <div class="card-body">
                             <h5 class="card-title text-white">{{ todo.title }}</h5>
-                            <p class="card-text text-white">{{ todo.incomplete_task_count }} незавершенных задач</p>
                             <a href="{% url 'todo:get_todo' todo.id %}" class="btn btn-primary">Подробнее</a>
                             <a href="{% url 'todo:delete_todo' todo.id %}" class="btn btn-danger ml-2">Удалить</a>
                         </div>
