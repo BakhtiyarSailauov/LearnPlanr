@@ -9,7 +9,7 @@ class TaskInline(admin.TabularInline):
 
 class AdminTodo(admin.ModelAdmin):
     inlines = [TaskInline]
-    list_display = ["author", "title", "created_at", "incomplete_task_count"]
+    list_display = ["author", "title", "created_at"]
 
 
 admin.site.register(Schedule, AdminTodo)

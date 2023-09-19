@@ -1,8 +1,5 @@
-import datetime
 import json
 from datetime import timedelta
-from django.db.utils import IntegrityError
-from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
@@ -57,7 +54,6 @@ class MainView(View):
 
                     if response:
                         content = response['choices'][0]['message']['content']
-                        print(content)
                         content_dict = json.loads(content)
                         current_time = timezone.now()
 
@@ -126,33 +122,38 @@ class MainView(View):
 def get_todo(request, todo_id):
     todo = get_object_or_404(Schedule, pk=todo_id)
     tasks = Task.objects.filter(schedule=todo).order_by("id")
+    chapters_count = 0
+    chapters_completed = 0
     chapters = []
-
     for task in tasks:
         task_data = {
             "task": task,
             "chapters": Chapter.objects.filter(task=task)
         }
+        chapters_count += task.all_chapter_count()
+        chapters_completed += (task.incomplete_chapter_count()-1)
         chapters.append(task_data)
-    context = {"todo": todo, "tasks": tasks, "chapters": chapters}
+        print(chapters_completed, chapters_count)
+    context = {"todo": todo, "tasks": tasks, "chapters": chapters, "chapters_count": chapters_count, "chapters_completed": chapters_completed}
     return render(request, "todo/page.html", context)
 
 
 def toggle_task_completion(request):
     if request.method == 'POST':
         task_data_id = request.POST.get('task_data_id')
-        first_btn = request.POST.get('first_btn')
-        print(first_btn)
         try:
-            chapter_previous = Chapter.objects.get(pk=str(int(task_data_id)-1))
             chapter = Chapter.objects.get(pk=task_data_id)
             chapter_next = Chapter.objects.get(pk=str(int(task_data_id)+1))
             chapter.completed = not chapter.completed
 
             chapter.next_button_enabled = not chapter.next_button_enabled
             chapter_next.next_button_enabled = not chapter_next.next_button_enabled
+            if chapter.task.all_chapter_count() == chapter.task.incomplete_chapter_count():
+                chapter.task.completed = not chapter.task.completed
             chapter.save()
+            chapter.task.save()
             chapter_next.save()
+
             return JsonResponse({'success': True})
         except Task.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Task not found'})

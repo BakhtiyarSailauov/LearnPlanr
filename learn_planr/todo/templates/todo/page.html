@@ -7,10 +7,23 @@
 <main class="main">
     <div class="container mt-5" style="background-color: #121212; padding: 30px; border-radius: 15px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="text-white">{{ todo.title }}</h2>
-            <a href="{% url 'todo:delete_todo' todo.id %}" class="btn btn-danger btn-sm">Удалить</a>
+            <h1 class="todo-title">{{ todo.title }}</h1>
+             <p class="created-date">
+                <span class="date-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-calendar" viewBox="0 0 16 16">
+                        <path d="M.5 0a.5.5 0 0 1 .5.5V1h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H1a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zm0 1H1a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H.5z"/>
+                    </svg>
+                </span>
+                <span class="date-text">Создано: {{ todo.created_at|date:"d.m.Y H:i" }}</span>
+        </p>
+            <a href="{% url 'todo:delete_todo' todo.id %}" class="btn btn-danger">Удалить</a>
         </div>
-        <p class="text-white">Создано: {{ todo.created_at }}</p>
+
+       <div class="progress mt-4">
+    <div id="progress-bar" class="progress-bar bg-success progress-bar-striped progress-bar-animated rounded-pill" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <span class="sr-only">0%</span>
+    </div>
+</div>
 
         <h3 class="text-white">Список задач:</h3>
         <ul class="list-group">
@@ -18,8 +31,16 @@
             {% with task=task_data.task chapters=task_data.chapters %}
             <li class="list-group-item main-task {% if task_data.completed %}completed{% endif %}">
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-white">{{ task.title }}</span>
                     <span class="deadline">{{ task.data_finish|date:"d.m.Y H:i" }}</span>
+                    <span class="text-white">{{ task.title }}</span>
+                    <div class="ml-auto">
+                        {% if task.completed %}
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 1.2rem; margin-left: 5px;"></i>
+                            <button class="btn btn-secondary toggle-task" disabled>Выполнено</button>
+                        {% else %}
+                            <button class="btn btn-success toggle-task" disabled>Не выполнено</button>
+                        {% endif %}
+                    </div>
                 </div>
                 <!-- Add a button to toggle the task completion status -->
                 <span id="toggle-subtasks-{{ task.id }}" class="text-white float-right">&#9660;</span>
@@ -28,20 +49,18 @@
                     <ul class="list-group">
                         {% for task_data in chapters %}
                         {% with task=task_data.task chapters=task_data.chapters %}
-                        <!-- Add a class to the sub-task items for styling -->
                         <li class="list-group-item sub-task {% if task.completed %}completed{% endif %}">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-white">{{ task_data.title }}</span>
                                 <span class="deadline">{{ task_data.data_finish|date:"d.m.Y H:i" }}</span>
+                                <span class="text-white">{{ task_data.title }}</span>
+                                {% if task_data.completed %}
+                                    <button id="toggle-task-{{ task_data.id }}" class="btn btn-secondary btn-sm float-right" disabled>Выполнено</button>
+                                {% elif not task_data.completed and forloop.first or task_data.next_button_enabled %}
+                                    <button id="toggle-task-{{ task_data.id }}" class="btn btn-success btn-sm float-right toggle-task first-task" data-completed="{% if task_data.completed %}true{% else %}false{% endif %}">Не выполнено</button>
+                                {% else %}
+                                    <button id="toggle-task-{{ task_data.id }}" class="btn btn-success btn-sm float-right toggle-task" disabled>Не выполнено</button>
+                                {% endif %}
                             </div>
-                            <!-- Add a button to toggle the sub-task completion status -->
-                            {% if task_data.completed %}
-                            <button id="toggle-task-{{ task_data.id }}" class="btn btn-secondary btn-sm float-right" disabled>Выполнено</button>
-                            {% elif not task_data.completed and forloop.first or task_data.next_button_enabled %}
-                            <button id="toggle-task-{{ task_data.id }}" class="btn btn-success btn-sm float-right toggle-task first-task" data-completed="{% if task_data.completed %}true{% else %}false{% endif %}">Не выполнено</button>
-                            {% else %}
-                            <button id="toggle-task-{{ task_data.id }}" class="btn btn-success btn-sm float-right toggle-task" disabled>Не выполнено</button>
-                            {% endif %}
                         </li>
                         {% endwith %}
                         {% endfor %}
@@ -65,6 +84,12 @@
         padding: 10px;
         border-radius: 5px;
         position: relative;
+    }
+
+    /* Style for links inside completed tasks */
+    .main-task.completed a {
+        text-decoration: none; /* Remove underlines */
+        color: #your-color; /* Change the link color */
     }
 
     /* Style for deadlines */
@@ -102,11 +127,65 @@
     .sub-task.completed {
         background-color: #444;
     }
+
+    /* Обновленные стили для даты создания */
+    .created-date {
+        display: flex;
+        align-items: center;
+        color: #555;
+        font-size: 18px;
+        margin-top: 10px;
+    }
+
+    .date-icon {
+        font-size: 24px;
+        margin-right: 10px;
+        color: #007bff;
+        animation: bounce 1s infinite;
+        cursor: pointer;
+    }
+
+    .date-text {
+        transition: color 0.3s;
+    }
+
+    .date-icon:hover {
+        transform: scale(1.2);
+        color: #00cc00;
+        animation: none;
+    }
+
+    .created-date:hover .date-text {
+        color: #00cc00;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-8px);
+        }
+        60% {
+            transform: translateY(-4px);
+        }
+    }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
+        var totalTasks = {{ chapters_count }};
+        var completedTasks = {{ chapters_completed }};
+
+        function updateProgress() {
+            // Вычислите текущий прогресс в процентах
+            var progress = (completedTasks / totalTasks) * 100;
+            // Обновите прогресс-бар и его текст
+            $('#progress-bar').css('width', progress + '%').text(progress.toFixed(2) + '%');
+        }
+
+
         function getCookie(name) {
             var cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -134,21 +213,23 @@
         $('.toggle-task').click(function () {
             var taskId = $(this).attr('id').split('-')[2];
             var taskStatus = $(this).text();
-            var firstBtn = $('#toggle-task-' + taskId).data('completed');
             if (taskStatus === 'Не выполнено' || taskStatus === 'Выполнено') {
                 $.ajax({
                     url: '{% url "todo:toggle_task_completion" %}',
                     type: 'POST',
                     data: {
                         'task_data_id': taskId,
-                        'first_btn': firstBtn,
                         'csrfmiddlewaretoken': csrfToken,
                     },
                     success: function (data) {
                         if (taskStatus === 'Не выполнено') {
                             $('#toggle-task-' + taskId).removeClass('btn-success').addClass('btn-danger').text('Выполнено');
+                            completedTasks++;
+                            updateProgress();
                         } else {
                             $('#toggle-task-' + taskId).removeClass('btn-danger').addClass('btn-success').text('Не выполнено');
+                            completedTasks--;
+                            updateProgress();
                         }
                     },
                     error: function () {
@@ -163,9 +244,8 @@
                 nextTaskButton.prop('disabled', false);
             }
         });
+        updateProgress();
     });
 </script>
-
-
 
 {% endblock %}
