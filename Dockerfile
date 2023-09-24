@@ -14,4 +14,4 @@ COPY learn_planr .
 
 
 
-CMD ["sh", "learn_planr/scripts/launch.sh"]
+CMD ["sh", "learn_planr/launch.sh"]
