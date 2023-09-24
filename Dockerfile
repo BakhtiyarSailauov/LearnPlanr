@@ -11,6 +11,7 @@ WORKDIR /code
 COPY --from=requirements-stage /tmp/requirements.txt .
 RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
 COPY . .
+RUN pip install Django==3.2
 
 
 
