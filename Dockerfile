@@ -1,10 +1,10 @@
 # Используйте базовый образ Python 3.8
-FROM python:3.8
+FROM python:3.11
 
 # Установите переменную окружения для удобства разработки (это можно удалить в production)
 ENV DEBUG=True
 
-# Установите рабочую директорию в контейнере
+# Установите рабочую директорию в контейнере в корневую папку проекта
 WORKDIR /app
 
 # Копируйте файлы pyproject.toml и poetry.lock в контейнер
@@ -20,4 +20,4 @@ COPY . /app/
 EXPOSE 8000
 
 # Запустите Django-приложение
-CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["poetry", "run", "python", "./learn_planr/manage.py", "runserver", "0.0.0.0:8000"]
