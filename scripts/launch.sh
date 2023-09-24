@@ -1,4 +1,4 @@
-export DJANGO_SETTINGS_MODULE=learn_planr.settings
+export DJANGO_SETTINGS_MODULE=learn_planr.learn_planr.settings
 python learn_planr/manage.py collectstatic --noinput
 echo 'Applying migrations...'
 python learn_planr/manage.py migrate
