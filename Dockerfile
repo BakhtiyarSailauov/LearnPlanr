@@ -9,13 +9,14 @@ COPY pyproject.toml poetry.lock /app/
 
 # Установите зависимости с использованием poetry
 RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-root
-#RUN pip install gunicorn
 
 # Копируйте остальные файлы проекта в контейнер
 COPY . /app/
 
 # Откройте порт, который будет использоваться Django (по умолчанию 8000)
 EXPOSE 8000
+
+RUN pip install gunicorn
 
 # Запустите Django-приложение
 CMD ["sh", "scripts/launch.sh"]
