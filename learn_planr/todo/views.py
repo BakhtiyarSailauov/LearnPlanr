@@ -65,8 +65,8 @@ class MainView(View):
                             current_time = task.data_finish
 
                             chapter_messages = [{"role": "user",
-                                                 "content": f"что нужно учить чтобы стать {key}. Укажи только сколько время уходят. На каждое из них детально. ('тема': 'время'). Верни как JSON dict без вложение"}]
-
+                                                 "content": f"что нужно учить чтобы учить {user_input.split(' ')[0]} {key}. Укажи только сколько время уходят. На каждое из них детально. ('тема': 'время'). Верни как JSON dict без вложение"}]
+                            print(chapter_messages)
                             chapter_response = openai.ChatCompletion.create(
                                 model="gpt-3.5-turbo",
                                 messages=chapter_messages,
@@ -78,7 +78,7 @@ class MainView(View):
                                 chapter_content = chapter_response['choices'][0]['message']['content']
                                 chapter_content_dict = json.loads(chapter_content)
                                 current_time = timezone.now()
-
+                                print(chapter_content)
                                 for key_task, value_task in chapter_content_dict.items():
                                     chapter = Chapter(task=task, title=key_task)
                                     chapter.data_start, chapter.data_finish = self.calculate_time_periods(current_time, value_task)

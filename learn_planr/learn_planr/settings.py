@@ -133,4 +133,4 @@ INTERNAL_IPS = [
 LOGIN_REDIRECT_URL = '/learn_planr/'
 
 LOGOUT_REDIRECT_URL = '/login'
-openai.api_key = "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"
+openai.api_key = "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"
