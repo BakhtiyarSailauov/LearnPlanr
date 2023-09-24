@@ -5,16 +5,16 @@ FROM python:3.11
 ENV DEBUG=True
 
 # Установите рабочую директорию в контейнере в корневую папку проекта
-WORKDIR /app
+WORKDIR /LearnPlanr
 
 # Копируйте файлы pyproject.toml и poetry.lock в контейнер
-COPY pyproject.toml poetry.lock /app/
+COPY pyproject.toml poetry.lock /LearnPlanr/
 
 # Установите зависимости с использованием poetry
 RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-root
 
 # Копируйте остальные файлы проекта в контейнер
-COPY . /app/
+COPY . /LearnPlanr/
 
 # Откройте порт, который будет использоваться Django (по умолчанию 8000)
 EXPOSE 8000
