@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 import openai
 
@@ -131,6 +131,7 @@ INTERNAL_IPS = [
 ]
 
 LOGIN_REDIRECT_URL = '/learn_planr/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 LOGOUT_REDIRECT_URL = '/login'
 openai.api_key = "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"
