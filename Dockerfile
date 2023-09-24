@@ -11,7 +11,7 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock /app/
 
 # Экспортируем зависимости в формате requirements.txt без хешей
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+RUN poetry export -f requirements.txt --output requirements.txt --no-hashes
 
 # Этап выполнения приложения
 FROM python:3.10 as app-stage
