@@ -1,5 +1,5 @@
 export DJANGO_SETTINGS_MODULE=bclproject.settings
-python .\learn_planr\manage.py collectstatic --noinput
+python manage.py collectstatic --noinput
 echo 'Applying migrations...'
 python manage.py migrate
 
