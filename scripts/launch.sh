@@ -1,6 +1,6 @@
-export DJANGO_SETTINGS_MODULE=bclproject.settings
-python manage.py collectstatic --noinput
+export DJANGO_SETTINGS_MODULE=learn_planr.settings
+python learn_planr/manage.py collectstatic --noinput
 echo 'Applying migrations...'
-python manage.py migrate
+python learn_planr/manage.py migrate
 
-gunicorn bclproject.wsgi:application --bind 0.0.0.0:$PORT
+gunicorn learn_planr.wsgi:application --bind 0.0.0.0:$PORT
