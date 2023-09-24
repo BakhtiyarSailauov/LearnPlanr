@@ -9,7 +9,7 @@ COPY pyproject.toml poetry.lock /app/
 
 # Установите зависимости с использованием poetry
 RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-root
-RUN pip install gunicorn
+#RUN pip install gunicorn
 
 # Копируйте остальные файлы проекта в контейнер
 COPY . /app/
