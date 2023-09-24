@@ -1,17 +1,32 @@
+# Этап установки зависимостей
 FROM python:3.10 as requirements-stage
 
-WORKDIR /tmp
-RUN pip install poetry==1.5.0
-COPY ./pyproject.toml ./poetry.lock* /tmp/
+# Устанавливаем Poetry
+RUN pip install poetry==1.1.5
+
+# Создаем рабочую директорию
+WORKDIR /app
+
+# Копируем файлы pyproject.toml и poetry.lock
+COPY pyproject.toml poetry.lock /app/
+
+# Экспортируем зависимости в формате requirements.txt без хешей
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-FROM python:3.10
+# Этап выполнения приложения
+FROM python:3.10 as app-stage
 
+# Создаем рабочую директорию
 WORKDIR /code
-COPY --from=requirements-stage /tmp/requirements.txt .
-RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
+
+# Копируем requirements.txt из предыдущего этапа
+COPY --from=requirements-stage /app/requirements.txt /code/
+
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+# Копируем все остальные файлы из текущего контекста (проект)
 COPY . .
 
-
-
+# Запускаем скрипт launch.sh
 CMD ["sh", "scripts/launch.sh"]
