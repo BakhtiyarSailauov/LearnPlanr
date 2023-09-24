@@ -1,23 +1,17 @@
-# Используйте базовый образ Python 3.8
-FROM python:3.11
+FROM python:3.11 as requirements-stage
 
-# Установите переменную окружения для удобства разработки (это можно удалить в production)
-ENV DEBUG=True
+WORKDIR /tmp
+RUN pip install poetry==1.5.0
+COPY ./pyproject.toml ./poetry.lock* /tmp/
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-# Установите рабочую директорию в контейнере в корневую папку проекта
-WORKDIR /LearnPlanr
+FROM python:3.10
 
-# Копируйте файлы pyproject.toml и poetry.lock в контейнер
-COPY pyproject.toml poetry.lock /LearnPlanr/
+WORKDIR /code
+COPY --from=requirements-stage /tmp/requirements.txt .
+RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
+COPY . .
 
-# Установите зависимости с использованием poetry
-RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-root
 
-# Копируйте остальные файлы проекта в контейнер
-COPY . /LearnPlanr/
 
-# Откройте порт, который будет использоваться Django (по умолчанию 8000)
-EXPOSE 8000
-
-# Запустите Django-приложение
-CMD ["poetry", "run", "python", "./learn_planr/manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "scripts/launch.sh"]
